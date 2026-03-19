@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>YRDtv | v0.4 alpha</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <iframe id="video-player" src="" allowfullscreen></iframe>
+  
+  <div id="menu">
+    <button onclick="toggleInfoPlaylist()">iNFO</button>
+  </div>
+  
+  <div id="info-playlist-container">
+    <span id="close-button" onclick="toggleInfoPlaylist()">&times; Cerrar</span>
+    
+    <div>
+      <h1>YRDtv | v0.4 alpha</h1>
+      <h5>html + css + javascript</h5>
+    </div>
+    
+    <hr>
+    
+    <div>
+      <h3>Listas de reproducción:</h3>
+      <ul>
+        <li><button onclick="changePlaylist('PLtXBcDuMV6J_Y28Kje7WxvfYdvjfCOWrd')">Default</button></li>
+        <li><button onclick="changePlaylist('PLd9auH4JIHvupoMgW5YfOjqtj6Lih0MKw')">80's</button></li>
+        <li><button onclick="changePlaylist('PL1Mmsa-U48mea1oIN-Eus78giJANx4D9W')">90's</button></li>
+        <li><button onclick="changePlaylist('PLpuDUpB0osJmZQ0a3n6imXirSu0QAZIqF')">00's</button></li>
+        <li><button onclick="changePlaylist('PLCZfGAvgXhFEP-VB97dY2OQxsLLN7U8e6')">Demoscene</button></li>
+        <li><button onclick="changePlaylist('PL7C791DD55914C154')">Amiga</button></li>
+      </ul>
+    </div>
+    
+    <hr>
+    
+    <p>
+      Los vídeos se reproducen en orden según se configure la lista en YouTube.
+      Al cargar una Playlist, se elige un vídeo aleatorio y continúa la lista.
+    </p>
+  </div>
+  
+  <div id="logo">
+    YRDtv v0.4 alpha
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
