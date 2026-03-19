@@ -3,52 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <title>YRDtv | v0.4 alpha</title>
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      background-color: #000;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: monospace;
+    }
+
+    #video-player {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #menu {
+      position: fixed;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+    }
+
+    #menu button {
+      margin: 0 5px;
+      background-color: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #info-playlist-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0,0,0,0.9);
+      color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 9999;
+    }
+
+    #video-list-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.95);
+      color: #fff;
+      padding: 20px;
+      max-height: 80%;
+      overflow-y: auto;
+      display: none;
+      z-index: 9999;
+    }
+
+    #video-list div {
+      margin: 10px 0;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 5px;
+    }
+
+    #video-list div:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    #close-button {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      cursor: pointer;
+    }
+
+    #logo {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.3;
+      color: #fff;
+    }
+  </style>
 </head>
 
 <body>
 
   <iframe id="video-player" src="" allowfullscreen></iframe>
-  
+
   <div id="menu">
     <button onclick="toggleInfoPlaylist()">iNFO</button>
-  </div>
-  
-  <div id="info-playlist-container">
-    <span id="close-button" onclick="toggleInfoPlaylist()">&times; Cerrar</span>
-    
-    <div>
-      <h1>YRDtv | v0.4 alpha</h1>
-      <h5>html + css + javascript</h5>
-    </div>
-    
-    <hr>
-    
-    <div>
-      <h3>Listas de reproducción:</h3>
-      <ul>
-        <li><button onclick="changePlaylist('PLtXBcDuMV6J_Y28Kje7WxvfYdvjfCOWrd')">Default</button></li>
-        <li><button onclick="changePlaylist('PLd9auH4JIHvupoMgW5YfOjqtj6Lih0MKw')">80's</button></li>
-        <li><button onclick="changePlaylist('PL1Mmsa-U48mea1oIN-Eus78giJANx4D9W')">90's</button></li>
-        <li><button onclick="changePlaylist('PLpuDUpB0osJmZQ0a3n6imXirSu0QAZIqF')">00's</button></li>
-        <li><button onclick="changePlaylist('PLCZfGAvgXhFEP-VB97dY2OQxsLLN7U8e6')">Demoscene</button></li>
-        <li><button onclick="changePlaylist('PL7C791DD55914C154')">Amiga</button></li>
-      </ul>
-    </div>
-    
-    <hr>
-    
-    <p>
-      Los vídeos se reproducen en orden según se configure la lista en YouTube.
-      Al cargar una Playlist, se elige un vídeo aleatorio y continúa la lista.
-    </p>
-  </div>
-  
-  <div id="logo">
-    YRDtv v0.4 alpha
+    <button onclick="loadPlaylistVideos()">Ver vídeos</button>
   </div>
 
-  <script src="script.js"></script>
+  <!-- INFO -->
+  <div id="info-playlist-container">
+    <span id="close-button" onclick="toggleInfoPlaylist()">✖</span>
+
+    <h1>YRDtv | v0.4 alpha</h1>
+    <h5>html + css + javascript</h5>
+
+    <hr>
+
+    <h3>Listas:</h3>
+    <button onclick="changePlaylist('PLtXBcDuMV6J_Y28Kje7WxvfYdvjfCOWrd')">Default</button>
+    <button onclick="changePlaylist('PLd9auH4JIHvupoMgW5YfOjqtj6Lih0MKw')">80's</button>
+    <button onclick="changePlaylist('PL1Mmsa-U48mea1oIN-Eus78giJANx4D9W')">90's</button>
+    <button onclick="changePlaylist('PLpuDUpB0osJmZQ0a3n6imXirSu0QAZIqF')">00's</button>
+    <button onclick="changePlaylist('PLCZfGAvgXhFEP-VB97dY2OQxsLLN7U8e6')">Demoscene</button>
+    <button onclick="changePlaylist('PL7C791DD55914C154')">Amiga</button>
+
+    <hr>
+
+    <p>
+      Reproducción automática tipo TV con selección aleatoria inicial.
+    </p>
+  </div>
+
+  <!-- LISTA DE VIDEOS -->
+  <div id="video-list-container">
+    <span id="close-button" onclick="closeVideoList()">✖</span>
+    <h3>Playlist</h3>
+    <div id="video-list">Cargando...</div>
+  </div>
+
+  <div id="logo">YRDtv v0.4 alpha</div>
+
+  <script>
+    var playlistId = "PLtXBcDuMV6J_Y28Kje7WxvfYdvjfCOWrd";
+
+    function changePlaylist(id) {
+      playlistId = id;
+      playRandomVideo();
+      toggleInfoPlaylist();
+    }
+
+    function playRandomVideo() {
+      var player = document.getElementById("video-player");
+      player.src = "https://www.youtube.com/embed?list=" + playlistId + "&autoplay=1&index=" + getRandomInt(1, 50);
+    }
+
+    function playVideoById(id) {
+      var player = document.getElementById("video-player");
+      player.src = "https://www.youtube.com/embed/" + id + "?autoplay=1";
+    }
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function toggleInfoPlaylist() {
+      var el = document.getElementById("info-playlist-container");
+      el.style.display = (el.style.display === "none") ? "block" : "none";
+    }
+
+    function closeVideoList() {
+      document.getElementById("video-list-container").style.display = "none";
+    }
+
+    function loadPlaylistVideos() {
+      var container = document.getElementById("video-list-container");
+      var list = document.getElementById("video-list");
+
+      container.style.display = "block";
+      list.innerHTML = "Cargando...";
+
+      fetch("https://www.youtube.com/feeds/videos.xml?playlist_id=" + playlistId)
+        .then(response => response.text())
+        .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
+        .then(data => {
+          var entries = data.getElementsByTagName("entry");
+          list.innerHTML = "";
+
+          for (var i = 0; i < entries.length; i++) {
+            var title = entries[i].getElementsByTagName("title")[0].textContent;
+            var videoId = entries[i].getElementsByTagName("yt:videoId")[0].textContent;
+
+            var div = document.createElement("div");
+            div.textContent = title;
+
+            div.onclick = function(id) {
+              return function() {
+                playVideoById(id);
+                closeVideoList();
+              };
+            }(videoId);
+
+            list.appendChild(div);
+          }
+        })
+        .catch(() => {
+          list.innerHTML = "Error cargando playlist";
+        });
+    }
+
+    changePlaylist(playlistId);
+
+    window.addEventListener("resize", function() {
+      var player = document.getElementById("video-player");
+      player.style.width = window.innerWidth + "px";
+      player.style.height = window.innerHeight + "px";
+    });
+  </script>
 
 </body>
 </html>
