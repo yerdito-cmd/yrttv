@@ -2,168 +2,164 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>YRDtv PRO Lite</title>
+<title>TV Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { margin:0; background:#000; font-family: monospace; overflow:hidden; }
-
-#player {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
+body {
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family: monospace;
+  overflow:hidden;
 }
 
-#menu {
+/* PLAYER */
+#player {
   position:fixed;
-  top:20px;
-  left:50%;
-  transform:translateX(-50%);
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+/* UI */
+#ui {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:rgba(0,0,0,0.7);
+  padding:10px;
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+}
+
+.video-btn {
+  background:#111;
+  border:1px solid #333;
+  padding:8px 12px;
+  cursor:pointer;
+  border-radius:5px;
+  white-space:nowrap;
+}
+
+.video-btn:hover {
+  background:#ff0050;
+}
+
+/* BOTONES */
+#controls {
+  position:fixed;
+  top:10px;
+  left:10px;
   z-index:9999;
 }
 
 button {
-  background:rgba(255,255,255,0.2);
-  border:none;
+  margin-right:5px;
+  padding:6px 10px;
+  background:#111;
   color:#fff;
-  padding:10px;
-  margin:5px;
+  border:1px solid #333;
   cursor:pointer;
 }
 
-#videoList {
+/* CRT EFFECT */
+#crt {
+  pointer-events:none;
   position:fixed;
-  bottom:0;
   width:100%;
-  height:220px;
-  background:rgba(0,0,0,0.95);
-  overflow-x:auto;
-  white-space:nowrap;
+  height:100%;
   display:none;
-  z-index:9999;
 }
 
-.videoCard {
-  display:inline-block;
-  width:200px;
-  margin:10px;
-  cursor:pointer;
-}
-
-.videoCard img {
+/* scanlines */
+#crt::before {
+  content:\"\"; 
+  position:absolute;
   width:100%;
-  border-radius:8px;
+  height:100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.05) 0px,
+    rgba(255,255,255,0.05) 1px,
+    transparent 1px,
+    transparent 2px
+  );
 }
 
-.videoCard:hover { transform:scale(1.1); }
+/* noise */
+#crt::after {
+  content:\"\"; 
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:url('https://media.giphy.com/media/oEI9uBYSzLpBK/giphy.gif');
+  opacity:0.05;
+}
+
+.crt-on #crt {
+  display:block;
+}
+
 </style>
 </head>
 
 <body>
 
-<iframe id="player" src="" allowfullscreen></iframe>
+<iframe id="player" allow="autoplay"></iframe>
 
-<div id="menu">
-  <button onclick="toggleList()">📺 Lista</button>
+<div id="crt"></div>
+
+<div id="controls">
+  <button onclick="toggleCRT()">📺 CRT</button>
 </div>
 
-<div id="videoList"></div>
+<div id="ui"></div>
 
 <script>
-let playlistId = "PLtXBcDuMV6J_Y28Kje7WxvfYdvjfCOWrd";
+
+// 👉 PON AQUÍ TU PLAYLIST
+const playlistId = "PLtXBcDuMV6J_Y28Kje7WxvfYdvjfCOWrd";
+
 let videos = [];
 let currentIndex = 0;
-let checkTimeout;
 
-// 🔧 CARGAR PLAYLIST (CON FIX CORS)
-function loadPlaylist() {
-  fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent("https://www.youtube.com/feeds/videos.xml?playlist_id=" + playlistId))
-    .then(r => r.text())
-    .then(str => new DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-      let entries = data.getElementsByTagName("entry");
-      videos = [];
-
-      for (let i = 0; i < entries.length; i++) {
-        let id = entries[i].getElementsByTagName("yt:videoId")[0].textContent;
-        let title = entries[i].getElementsByTagName("title")[0].textContent;
-        let thumb = entries[i].getElementsByTagName("media:thumbnail")[0].getAttribute("url");
-
-        videos.push({ id, title, thumb });
-      }
-
-      if (videos.length === 0) throw new Error("Playlist vacía");
-
-      currentIndex = Math.floor(Math.random() * videos.length);
-      playVideo();
-      renderList();
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById("videoList").innerHTML = "❌ Error cargando playlist";
-    });
+// cargar lista desde youtube (modo simple embed index)
+function loadVideo(index) {
+  currentIndex = index;
+  document.getElementById("player").src =
+    `https://www.youtube.com/embed?list=${playlistId}&index=${index}&autoplay=1&mute=1`;
 }
 
-// ▶️ PLAY VIDEO
-function playVideo() {
-  clearTimeout(checkTimeout);
+// generar lista visual
+function generateList() {
+  const ui = document.getElementById("ui");
+  ui.innerHTML = "";
 
-  let player = document.getElementById("player");
-  player.src = "https://www.youtube.com/embed/" + videos[currentIndex].id + "?autoplay=1";
-
-  // fallback si falla
-  checkTimeout = setTimeout(() => {
-    console.log("Saltando video...");
-    nextVideo();
-  }, 8000);
-}
-
-// ⏭ SIGUIENTE
-function nextVideo() {
-  currentIndex++;
-  if (currentIndex >= videos.length) currentIndex = 0;
-  playVideo();
-}
-
-// 🎬 RENDER LISTA
-function renderList() {
-  let container = document.getElementById("videoList");
-  container.innerHTML = "";
-
-  videos.forEach((v, i) => {
-    let div = document.createElement("div");
-    div.className = "videoCard";
-
-    div.innerHTML = `
-      <img src="${v.thumb}">
-      <p>${v.title}</p>
-    `;
-
-    div.onclick = () => {
-      currentIndex = i;
-      playVideo();
-    };
-
-    container.appendChild(div);
-  });
-}
-
-// 📺 TOGGLE LISTA
-function toggleList() {
-  let el = document.getElementById("videoList");
-  el.style.display = (el.style.display === "none") ? "block" : "none";
-}
-
-// 🎯 DETECTAR FIN (hack)
-window.addEventListener("message", function(event) {
-  if (event.data && event.data.event === "onStateChange" && event.data.info === 0) {
-    nextVideo();
+  for (let i = 1; i <= 20; i++) {
+    const btn = document.createElement("div");
+    btn.className = "video-btn";
+    btn.innerText = "Video " + i;
+    btn.onclick = () => loadVideo(i);
+    ui.appendChild(btn);
   }
-});
+}
 
-// 🚀 START
-loadPlaylist();
+// CRT toggle
+function toggleCRT() {
+  document.body.classList.toggle("crt-on");
+}
+
+// autoplay inicial random
+function randomStart() {
+  let rand = Math.floor(Math.random() * 20) + 1;
+  loadVideo(rand);
+}
+
+generateList();
+randomStart();
+
 </script>
 
 </body>
