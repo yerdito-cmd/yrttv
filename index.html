@@ -2,153 +2,209 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Mini Tumblr Clone</title>
+<title>TV Player Web</title>
 
 <style>
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0f0f0f;
-    color: #eaeaea;
+    background: #000;
+    font-family: Arial;
+    color: white;
+    overflow: hidden;
 }
 
-/* HEADER */
-header {
-    background: #111;
-    padding: 20px;
-    font-size: 24px;
-    font-weight: bold;
-    border-bottom: 1px solid #222;
+/* VIDEO FULL */
+#player {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:1;
 }
 
-/* CONTENEDOR */
-.container {
-    max-width: 700px;
-    margin: auto;
-    padding: 20px;
+#player iframe {
+    width:100%;
+    height:100%;
+    border:none;
 }
 
-/* POST */
-.post {
-    background: #1a1a1a;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-    border: 1px solid #222;
+/* UI PANEL */
+#ui {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index:2;
+    overflow-y:auto;
+    padding:10px;
 }
 
-/* TITULO */
-.post h2 {
-    margin-top: 0;
+/* CANALES */
+.channel {
+    margin-bottom: 15px;
+    border-bottom:1px solid #333;
+    padding-bottom:10px;
 }
 
-/* LISTAS */
-.post ul {
-    padding-left: 20px;
+.channel h3 {
+    margin:5px 0;
+    cursor:pointer;
 }
 
-.post li {
-    margin-bottom: 5px;
+/* PLAYLIST */
+.playlist {
+    display:none;
 }
 
-/* IFRAME */
-iframe {
-    width: 100%;
-    height: 300px;
-    border: none;
-    margin-top: 10px;
-    border-radius: 10px;
+.video {
+    display:flex;
+    margin:5px 0;
+    cursor:pointer;
 }
 
-/* FOOTER */
-footer {
-    text-align: center;
-    padding: 20px;
-    opacity: 0.5;
+.video img {
+    width:80px;
+    height:45px;
+    margin-right:10px;
 }
 
-/* EFECTO HOVER */
-.post:hover {
-    transform: scale(1.01);
-    transition: 0.2s;
+.video:hover {
+    background:#222;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-    Mini Tumblr Clone
-</header>
-
-<div class="container">
-
-    <!-- POST 1 -->
-    <div class="post">
-        <h2>📌 Lista de cosas</h2>
-        <ul>
-            <li>Item 1</li>
-            <li>Item 2</li>
-            <li>Item 3</li>
-            <li>Item 4</li>
-        </ul>
-    </div>
-
-    <!-- POST 2 -->
-    <div class="post">
-        <h2>🎬 Video embed (sin API)</h2>
-        <p>Iframe normal (como Tumblr)</p>
-        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
-    </div>
-
-    <!-- POST 3 -->
-    <div class="post">
-        <h2>📝 Texto tipo Tumblr</h2>
-        <p>
-            Esto simula un post típico: texto random, estilo simple,
-            sin backend ni APIs.
-        </p>
-    </div>
-
-    <!-- POST 4 -->
-    <div class="post">
-        <h2>📚 Lista más grande</h2>
-        <ul>
-            <li>Elemento A</li>
-            <li>Elemento B</li>
-            <li>Elemento C</li>
-            <li>Elemento D</li>
-            <li>Elemento E</li>
-        </ul>
-    </div>
-
+<!-- PLAYER -->
+<div id="player">
+    <iframe id="videoFrame" src=""></iframe>
 </div>
 
-<footer>
-    hecho con HTML + CSS + JS (sin APIs)
-</footer>
+<!-- UI -->
+<div id="ui"></div>
 
 <script>
-// Simulación simple (extra opcional)
-console.log("Mini Tumblr listo");
 
-// Ejemplo: añadir post dinámico
-function addPost(title, content) {
-    const container = document.querySelector('.container');
+/* =========================
+   DATA (EDITA AQUÍ)
+========================= */
 
-    const post = document.createElement('div');
-    post.className = 'post';
+const channels = [
+{
+    name: "🎵 Música",
+    videos: [
+        {id:"dQw4w9WgXcQ", title:"Video 1"},
+        {id:"3JZ_D3ELwOQ", title:"Video 2"},
+        {id:"L_jWHffIx5E", title:"Video 3"}
+    ]
+},
+{
+    name: "🔥 Mix",
+    videos: [
+        {id:"kJQP7kiw5Fk", title:"Video 4"},
+        {id:"fJ9rUzIMcZQ", title:"Video 5"}
+    ]
+}
+];
 
-    post.innerHTML = `
-        <h2>${title}</h2>
-        <p>${content}</p>
-    `;
 
-    container.prepend(post);
+/* =========================
+   UI GENERATION
+========================= */
+
+const ui = document.getElementById("ui");
+
+channels.forEach((channel, cIndex) => {
+
+    const chDiv = document.createElement("div");
+    chDiv.className = "channel";
+
+    const title = document.createElement("h3");
+    title.textContent = channel.name;
+
+    const list = document.createElement("div");
+    list.className = "playlist";
+
+    title.onclick = () => {
+        list.style.display = list.style.display === "block" ? "none" : "block";
+    };
+
+    channel.videos.forEach((vid, vIndex) => {
+
+        const vidDiv = document.createElement("div");
+        vidDiv.className = "video";
+
+        vidDiv.innerHTML = `
+            <img src="https://img.youtube.com/vi/${vid.id}/mqdefault.jpg">
+            <span>${vid.title}</span>
+        `;
+
+        vidDiv.onclick = () => {
+            playVideo(cIndex, vIndex);
+        };
+
+        list.appendChild(vidDiv);
+    });
+
+    chDiv.appendChild(title);
+    chDiv.appendChild(list);
+    ui.appendChild(chDiv);
+});
+
+
+/* =========================
+   PLAYER LOGIC
+========================= */
+
+let currentChannel = 0;
+let currentVideo = 0;
+let timeoutCheck;
+
+function playVideo(c, v) {
+    currentChannel = c;
+    currentVideo = v;
+
+    const vid = channels[c].videos[v];
+
+    const iframe = document.getElementById("videoFrame");
+    iframe.src = `https://www.youtube.com/embed/${vid.id}?autoplay=1`;
+
+    startFailCheck();
 }
 
-// ejemplo
-// addPost("Nuevo post dinámico", "Añadido con JS");
+
+/* =========================
+   AUTO NEXT SI FALLA
+========================= */
+
+function startFailCheck() {
+    clearTimeout(timeoutCheck);
+
+    timeoutCheck = setTimeout(() => {
+        nextVideo();
+    }, 8000); // si no carga en 8s -> siguiente
+}
+
+function nextVideo() {
+    currentVideo++;
+
+    if (currentVideo >= channels[currentChannel].videos.length) {
+        currentVideo = 0;
+    }
+
+    playVideo(currentChannel, currentVideo);
+}
+
+
+/* =========================
+   AUTO START
+========================= */
+
+playVideo(0,0);
 
 </script>
 
